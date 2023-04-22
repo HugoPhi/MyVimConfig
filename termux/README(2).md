@@ -1,4 +1,4 @@
-[TOC]
+${toc}
 
 # easy config of newly downloaded termux
 
