@@ -6,10 +6,10 @@
     "                         |___/                                                                                    
 
 
-
+" 2023.3.2 | Windows11 nvim90
 " >>> 插件管理 <<<
 
-call plug#begin('C:\tools\vim\vim90\Extensions')
+call plug#begin()
 
 " > Add : Plug 'path' below"
 Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle'}              " nerdtree
