@@ -1,0 +1,816 @@
+" Vim with all enhancements
+source $VIMRUNTIME/vimrc_example.vim
+
+" Use the internal diff if available.
+" Otherwise use the special 'diffexpr' for Windows.
+if &diffopt !~# 'internal'
+  set diffexpr=MyDiff()
+endif
+function MyDiff()
+  let opt = '-a --binary '
+  if &diffopt =~ 'icase' | let opt = opt . '-i ' | endif
+  if &diffopt =~ 'iwhite' | let opt = opt . '-b ' | endif
+  let arg1 = v:fname_in
+  if arg1 =~ ' ' | let arg1 = '"' . arg1 . '"' | endif
+  let arg1 = substitute(arg1, '!', '\!', 'g')
+  let arg2 = v:fname_new
+  if arg2 =~ ' ' | let arg2 = '"' . arg2 . '"' | endif
+  let arg2 = substitute(arg2, '!', '\!', 'g')
+  let arg3 = v:fname_out
+  if arg3 =~ ' ' | let arg3 = '"' . arg3 . '"' | endif
+  let arg3 = substitute(arg3, '!', '\!', 'g')
+  if $VIMRUNTIME =~ ' '
+    if &sh =~ '\<cmd'
+      if empty(&shellxquote)
+        let l:shxq_sav = ''
+        set shellxquote&
+      endif
+      let cmd = '"' . $VIMRUNTIME . '\diff"'
+    else
+      let cmd = substitute($VIMRUNTIME, ' ', '" ', '') . '\diff"'
+    endif
+  else
+    let cmd = $VIMRUNTIME . '\diff'
+  endif
+  let cmd = substitute(cmd, '!', '\!', 'g')
+  silent execute '!' . cmd . ' ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3
+  if exists('l:shxq_sav')
+    let &shellxquote=l:shxq_sav
+  endif
+endfunction
+
+
+"______________________________configurations___________________________________
+
+"插件管理
+call plug#begin('C:\tools\vim\vim90\Extensions')
+Plug 'scrooloose/nerdtree'                                         " NerdTree
+Plug 'ryanoasis/vim-devicons'                                      " ~ 
+Plug 'Xuyuanp/nerdtree-git-plugin'                                 " ~
+Plug 'skywind3000/vim-auto-popmenu'                                " 补全插件
+Plug 'skywind3000/vim-dict'                                        " ~
+Plug 'nathanaelkane/vim-indent-guides'                             " indent-rainbow
+Plug 'jiangmiao/auto-pairs'                                        " 括号匹配
+Plug 'Yggdroot/indentLine'                                         " 括号对齐线
+Plug 'scrooloose/nerdcommenter'                                    " 注释
+Plug 'mhinz/vim-startify'                                          " 首页美化
+" Plug 'scrooloose/syntastic'                                        " 错误提示
+Plug 'majutsushi/tagbar'                                           " 类图
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }                " fzf
+Plug 'junegunn/fzf.vim'                                            " ~
+Plug 'iamcco/markdown-preview.nvim'                                " markdown preview
+Plug 'iamcco/mathjax-support-for-mkdp'                             " ~
+" >>> Notice <<< : if :markdown can not run, try ":call mkdp#util#install()"
+Plug 'voldikss/vim-floaterm'                                       " 浮窗终端 
+Plug 'jbyuki/venn.nvim'                                            " 作图 
+Plug 'Exafunction/codeium.vim'                                     " codeium 
+
+" >>> ColorSchemes <<<
+Plug 'tomasiser/vim-code-dark'                                     " codedark
+Plug 'sainnhe/everforest'                                          " everforest
+
+call plug#end()
+
+"_______________________ Pre loader ___________________________
+" 设置颜色主题:
+
+colorscheme  codedark
+syntax on 
+
+" > New: 
+" print_wb
+" > available:
+" >> Apply to Dark backgound:
+" elflord
+" evening
+" darkblue
+" >> Apply to Light backgound:
+" habamax(when light backgound)
+
+autocmd BufEnter * exec ":call PreLoader()"
+func! PreLoader()
+    set autoindent
+    if &filetype == 'sql'
+        exec ":set filetype=text"
+        exec ":colorscheme evening"
+        " exec ":call BracketRound()"
+    elseif &filetype == 'cpp'
+        exec ":syntax off"
+    elseif &filetype == 'c'
+        exec ":syntax off"
+    elseif &filetype == 'python'
+        exec ":syntax on"
+        exec ":colorscheme desert"
+    endif
+endfunc
+
+"______________________________________________________________
+
+
+
+
+
+
+"_______________________FloatTerminal__________________________"
+noremap <C-space> :call Floaterm()<CR>
+tnoremap <silent> <C-space> <C-\><C-n>:FloatermToggle<CR>
+
+" :w
+def Floaterm()
+    :FloatermToggle 
+enddef 
+
+
+" let g:floaterm_height=0.65
+" let g:floaterm_with=0.95
+" let g:floaterm_wintype=float
+" let g:floaterm_autoclose=2
+" nmap <F2> :FloatermNew --height=0.6 --width=0.85 --wintype=float --name=floaterm1 --position=bottom --autoclose=2 --cmd="C:\Users\DELL\AppData\Local\Microsoft\WindowsApps\Microsoft.PowerShell_8wekyb3d8bbwe\pwsh.exe"<CR>
+
+nmap <F2> :FloatermNew --height=0.6 --width=0.85 --wintype=float --name=floaterm1 --position=bottom --autoclose=2 <CR>
+"______________________________________________________________"
+
+
+
+"_______________________Markdown Preview________________________
+nmap <A-m> :MarkdownPreview<CR>
+nmap <A-S-m> :MarkdownPreviewStop<CR>
+
+let g:mkdp_auto_start = 0
+" 设置为 1 可以在打开 markdown 文件的时候自动打开浏览器预览，只在打开
+" markdown 文件的时候打开一次
+
+let g:mkdp_auto_open = 0
+" 设置为 1 在编辑 markdown 的时候检查预览窗口是否已经打开，否则自动打开预
+" 览窗口
+
+let g:mkdp_auto_close = 1
+" 在切换 buffer 的时候自动关闭预览窗口，设置为 0 则在切换 buffer 的时候不
+" 自动关闭预览窗口
+
+let g:mkdp_refresh_slow = 0
+" 设置为 1 则只有在保存文件，或退出插入模式的时候更新预览，默认为 0，实时
+" 更新预览
+
+let g:mkdp_command_for_global = 0
+" 设置为 1 则所有文件都可以使用 MarkdownPreview 进行预览，默认只有 markdown
+" 文件可以使用改命令
+
+let g:mkdp_theme = 'light' 
+" 设置主题'light' or 'dark'
+
+let g:mkdp_browser = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+
+"______________________________________________________________
+
+
+"---------------------类图-------------------------
+nmap <leader>tg :TagbarToggle<CR>
+
+let g:tagbar_width=30
+let g:tagbar_right=1
+let g:tagbar_autoclose=1
+"-------------------------------------------------
+
+
+"---------------scrooloose/syntastic--------------
+
+" let g:syntastic_mode_map = {'mode':'passive'}
+
+set statusline+=%#warningmsg# 
+set statusline+=%{SyntasticStatuslineFlag()}      
+set statusline+=%*     
+let g:syntastic_always_populate_loc_list = 0  
+let g:syntastic_auto_loc_list = 0  
+let g:syntastic_check_on_open = 0
+let g:syntastic_check_on_wq = 0 
+let g:syntastic_auto_jump = 1
+"高亮错误
+let g:syntastic_enable_highlighting=0
+"设置error和warning的标志 
+let g:syntastic_enable_signs = 1  
+let g:syntastic_error_symbol= '>>'   " ''   
+let g:syntastic_warning_symbol= ''    " '!'  
+"no-unused-args 忽略不使用的参数 
+"no-redefined 忽略重定义 
+"no-max-line-length 忽略每行最长的检测         
+"ignore 542 551 忽略if条件的body为空(如...elseif ret == nil then end，then和end中间没有语句)；忽略空语句(如;)，如果用了;则成对出现该语法检测warning  
+"有语法错误的一行左侧栏会有S&gt;标识，光标移动到改行，vim下发会给出提示。修改正确后保存，则该'S&gt;'会消失。  
+let g:syntastic_python_checkers = ['python']    " ['python', 'flake8']
+let g:syntastic_lua_checkers = ["/usr/bin/luac5.3.5", "luacheck"]     
+let g:syntastic_lua_luacheck_args = "--codes --no-max-comment-line-length --ignore 542 551" 
+"c
+"let g:syntastic_c_compiler =['gcc', 'clang', 'make']       
+"let g:syntastic_c_compiler_options ='-Wpedantic -g'   
+let g:syntastic_c_compiler_options ='-std=gnu17'  
+let g:syntastic_c_include_dirs=['/usr/include/']        
+let g:syntastic_c_config_file='.syntastic_c_config_file'                      
+"cpp         
+let g:syntastic_cpp_include_dirs = ['/usr/include/'] 
+let g:syntastic_cpp_remove_include_errors = 1 
+let g:syntastic_cpp_check_header = 1 
+let g:syntastic_cpp_checkers = ['gcc', 'clang']    
+let g:syntastic_cpp_compiler = 'gcc'
+let g:syntastic_cpp_compiler_options = '-std=c++17'  
+
+"关闭syntastic语法检查, 鼠标复制代码时用到, 防止把错误标志给复制了
+nnoremap <silent> <Leader>ec :SyntasticToggleMode<CR>
+function! ToggleErrors()
+    let old_last_winnr = winnr('$')
+    lclose
+    if old_last_winnr == winnr('$')
+        " Nothing was closed, open syntastic error location panel
+        Errors
+    endif
+endfunction
+
+"-------------------------------------------------
+
+"______________________fzf________________________
+let g:fzf_preview_window = []           "关闭窗口预览
+nmap zz :Files<CR>
+"_________________________________________________
+
+
+"---------------------indentLine--------------------
+let g:indentLine_enabled = 1			" 使插件生效
+let g:indentLine_char = '┊'				" 设置缩进线字符，也可以为 '|', '┆', '┊' 等
+let g:indentLine_conceallevel =  2		" 使插件正常运行
+"---------------------------------------------------
+
+"--------------------nerdcommenter------------------
+" 使用：
+" <leader>+cc : 注释
+" <leader>+cu : 取消
+" <leader>c<space>  加上/解开注释, 智能判断
+" <leader>cy   先复制, 再注解(p可以进行黏贴)
+
+"注释的时候自动加个空格, 强迫症必配
+let g:NERDSpaceDelims=1 
+"---------------------------------------------------
+
+
+
+"--------------------indent guides--------------"
+
+" let g:indent_guides_enable_on_vim_startup = 1 "Open this Plugin at beginning"
+map <F4> : IndentGuidesToggle<CR>
+
+
+let g:indent_guides_auto_colors = 0
+autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=green   ctermbg=8
+autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=green   ctermbg=8
+
+"-----------------------------------------------"
+
+
+"-----------------------airline-------------------" (disabled)
+" set laststatus=2    " 始终显示状态栏
+let g:airline#extensions#tabline#enabled = 1                " 设置开启tab样式
+let g:airline#extensions#tabline#formatter = 'jsformatter'  " 设置默认tab栏样式
+"let g:airline#extensions#tabline#left_sep = ' '
+"let g:airline#extensions#tabline#left_alt_sep = '|'
+let g:airline_theme="ayu_mirage"
+"understated
+"base16_adwaita
+"ayu_mirage
+"apprentice
+"ayu_dark
+"angr"
+"-------------------------------------------------"
+
+
+
+"-----------------------NerdTree---------------------"
+"F3 打开Nerd tree
+map <F3> :NERDTreeToggle<CR>
+
+"当NERDTree为剩下的唯一窗口时自动关闭
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+"设置树的显示图标
+let g:NERDTreeDirArrowExpandable = '' 
+let g:NERDTreeDirArrowCollapsible = ''
+let g:NERDTreeHidden=0     "不显示隐藏文件
+
+let g:NERDTreeNodeDelimiter="\u00a0"   " 解决^G问题
+""""""""
+let g:NERDTreeGitStatusShowIgnored = 1
+let g:NERDTreeGitStatusIndicatorMapCustom = {
+    \ "Modified"  : "✹",
+    \ "Staged"    : "✚",
+    \ "Untracked" : "✭",
+    \ "Renamed"   : "➜",
+    \ "Unmerged"  : "═",
+    \ "Deleted"   : "✖",
+    \ "Dirty"     : "✗",
+    \ "Clean"     : "✔︎",
+    \ 'Ignored'   : '☒',
+    \ "Unknown"   : "?"
+    \ }
+"----------------------------------------------------"
+
+
+
+"-----------------------Compleation for txt------------------"
+let g:apc_enable = 1
+
+" https://zhuanlan.zhihu.com/p/349271041 "
+" !!!! input <tab> to select"
+" 设定需要生效的文件类型，如果是 "*" 的话，代表所有类型
+" 设置特定文件的模板{'text':1, 'markdown':1, 'php':1, "python":1, "cpp":1}
+let g:apc_enable_ft = {"*":1}
+
+" 设定从字典文件以及当前打开的文件里收集补全单词，详情看 ':help cpt'
+set cpt=.,k,w,b
+
+" 不要自动选中第一个选项。
+set completeopt=menu,menuone,noselect
+
+" 禁止在下方显示一些啰嗦的提示
+set shortmess+=c
+"-------------------------------------------------------------"
+
+
+
+"---------------------Rainbow------------------------" (Disabled)
+let g:rainbow_active = 0
+
+let g:rainbow_load_separately = [
+    \ [ '*' , [['(', ')'], ['\[', '\]'], ['{', '}']] ],
+    \ [ '*.tex' , [['(', ')'], ['\[', '\]']] ],
+    \ [ '*.cpp' , [['(', ')'], ['\[', '\]'], ['{', '}']] ],
+    \ [ '*.{html,htm}' , [['(', ')'], ['\[', '\]'], ['{', '}'], ['<\a[^>]*>', '</[^>]*>']] ],
+    \ ]
+
+let g:rainbow_guifgs = ['RoyalBlue3', 'DarkOrange3', 'DarkOrchid3', 'FireBrick']
+let g:rainbow_ctermfgs = ['lightblue', 'lightgreen', 'yellow', 'red', 'magenta']
+"-----------------------------------------------------"
+
+
+
+
+"-----------------------maps---------------------"
+
+
+" Algorithm Tempaltes 
+source D:\CodeHub\CppRepos\Templates\cpp_algorithm_template.vim  
+" source D:\CodeHub\CppRepos\Templates\Headers.vim
+source D:\CodeHub\PythonRepos\Templates\python_algorithm_template.vim  
+
+
+" reload auto load options such as wraps, snippets 
+nmap >< :call ReloadAutoOptions()<CR>
+func! ReloadAutoOptions()
+    exec ":call FileWraps()"
+    exec ":call MySnippets()"
+endfunc
+
+
+" add insents
+autocmd BufEnter * exec ":call AddIndent()" 
+func! AddIndent()
+    if &filetype == 'c'
+        exec ":vnoremap <C-/> I// <Esc>"
+    elseif &filetype == 'cpp'
+        exec ":vnoremap <C-/> I// <Esc>"
+    elseif &filetype == 'python'
+        exec ":vnoremap <C-/> I// <Esc>"
+    elseif &filetype == 'java'
+        exec ":vnoremap <C-/> I// <Esc>"
+    elseif &filetype == 'rust'
+        exec ":vnoremap <C-/> I// <Esc>"
+    elseif &filetype == 'lua'
+        exec ":vnoremap <C-/> I-- <Esc>"
+    elseif &filetype == 'vim'
+        exec ":vnoremap <C-/> I\" <Esc>"
+    endif
+endfunc
+
+
+" 关闭搜索后高亮
+nmap mh :noh<CR>
+
+
+" goback 
+nmap gb u<C-r>
+imap gb <esc>u<C-r>a
+
+
+" 退出vim
+nmap JK :q<CR>
+nmap !JK :q!<CR>
+
+    
+" 退出insert mode
+imap jk <Esc>l
+nmap qq <Esc>
+vmap qq <Esc>
+
+
+" 将normal 下的 Ctrl + s --> 保存
+nmap <c-s> :w<Enter>
+imap <c-s> <Esc>:w<Enter>i<Right>
+
+
+" NORMAL状态下全选
+nmap <C-a> gg0vG$
+
+
+" 粘贴
+imap <A-v> <Esc>"+Pa
+nmap <A-v> "+p
+
+
+" 复制
+" > 1. 将所有的复制全部转换为到系统的粘贴板
+" augroup Yank
+" autocmd!
+" autocmd TextYankPost * :call system('clip ',@")
+" augroup END
+" > 2. maps(recommend)
+vmap <A-c> y:call system('clip ',@")<Cr><Esc>
+nmap <A-c> yy:call system('clip ',@")<Cr><Esc>
+
+
+" close pseudo-code 
+autocmd BufEnter * exec ":call CodeClose()"
+func! CodeClose()
+    set autoindent
+    if &filetype == 'text'
+        " exec ":inoremap {{{<CR> :EndFunc<Esc>6hi<CR><Esc>k$as<Esc>i<CR><Esc>xa<tab>"
+        " exec ":inoremap {{<CR> then:EndIf<Esc>4hi<CR><Esc>k$as<Esc>i<CR><Esc>xa<tab>"
+        " exec ":inoremap {<CR> do:EndLoop<Esc>6hi<CR><Esc>k$as<Esc>i<CR><Esc>xa<tab>"
+    elseif &filetype == 'vim'
+        exec ":inoremap func! func! endfunc<Esc>6hi<CR><Esc>k$a"
+        exec ":inoremap function function endfunction<Esc>10hi<CR><Esc>k$a"
+        exec ":inoremap if if endif<Esc>4hi<CR><Esc>k$a"
+        exec ":inoremap for for endfor<Esc>5hi<CR><Esc>k$a"
+        exec ":inoremap while while endwhile<Esc>7hi<CR><Esc>k$a"
+    endif
+endfunc
+
+
+" insert sequense for code 
+noremap <F5> :call InsertSeq(
+func! InsertSeq(x)
+    for i in range (a:x + 1)
+        /^/ s//\=i+1 . '. '/ |let i=i+1
+    endfor
+endfunc
+
+
+" wrap 
+" Bug: can not wrap only one letter
+autocmd BufEnter * exec ":call FileWraps()"
+"
+" > global wraps
+vnoremap " hdi"<Esc>pla"<Esc>
+vnoremap ' hdi'<Esc>pla'<esc>
+vnoremap ( hdi(<Esc>pla)<esc>
+vnoremap [ hdi[<Esc>pla]<esc>
+vnoremap { hdi{<Esc>pla}<esc>
+"
+" > wraps for specific filetypes
+func! FileWraps()
+    if &filetype == 'python'
+        exec ":vnoremap :\" hdi\"\"\"<Esc>pla\"\"\"<esc>"
+    elseif &filetype == 'cpp'
+        exec ":vnoremap \/* hdi\/*<Esc>pla*\/<esc>"
+        exec ":vnoremap <> hdi<<esc>pla><esc>"
+    elseif &filetype == 'markdown'
+        exec ":vnoremap <> hdi<<esc>pla><esc>"
+    elseif &filetype == 'vim'
+        exec ":vnoremap <> hdi<<esc>pla><esc>"
+    endif
+endfunc
+
+
+" select a word by space 
+nmap <space> bve
+nmap <S-space> evb
+vmap <space> e
+vmap <S-space> b
+
+
+" select whole line
+nmap ww ^v$h
+
+
+" 运行lf 
+map ,fd :call RunLF()<CR> 
+func! RunLF() 
+    exec "!lf"
+    " exec "!ranger"
+endfunc
+
+
+" >>>>>>>>>>>>>>>>>> Snippets <<<<<<<<<<<<<<<<<<<<<<< "
+autocmd BufEnter * exec ":call MySnippets()"
+func! MySnippets()
+    if &filetype == 'cpp'
+        " Insert: add snippet of endline; Normal: add snippet at rear of this line 
+        " exec ":inoremap .endl std::cout << std::endl;"
+        exec ":nnoremap .<Enter> $a std::cout << std::endl;<Esc>"
+        " Insert: Print an arr with length arg
+        " exec ":inoremap .prr for (const auto &x : arr) {std::cout << x << \" \";}"
+        " Insert: printfline
+        " exec ":inoremap .prl printf(\"\\n\");<esc>4hi"
+    elseif &filetype == 'c'
+        " exec ":inoremap .prl printf(\"\\n\");<esc>4hi"
+        exec ":nnoremap .<CR> $a printf(\"\\n\");<Esc>"
+    elseif &filetype == 'markdown'
+        exec ":vnoremap <: hdi<-- !<esc>pla --><esc>"
+        exec ":vnoremap <F hdi<font face=\"Times New Roman\" color=\"black\" size=4> <esc>pla <\/font><esc>7h"
+        exec ":vnoremap <A hdi<p align=\"right\"> <esc>pla <\/p><esc>4h"
+        exec ":vnoremap <M hdi<center> <esc>pla <\/center><esc>9h"       
+    endif 
+endfunc
+" >>>>>>>>>>>>>>>>>> Snippets End <<<<<<<<<<<<<<<<<<<<<<< "
+
+
+
+
+" >>>>>>>>>>>>>>>>>> Compile & Run <<<<<<<<<<<<<<<<<<<<<<< "
+" 编译（不运行） compile all *.cpp
+map <S-F12> :call CompileFile()<CR>
+func! CompileFile()
+    exec "w"
+    if &filetype == 'c'
+        exec "!gcc20 -g .\\*.c"
+        " exec "!gcc20 -g %"
+    elseif &filetype == 'cpp'
+        exec "!g++20 -g .\\*.cpp"
+        " exec "!g++20 -g %"
+    elseif &filetype == 'rust'
+        exec "!cargo build"
+    elseif &filetype == 'java'
+        exec "!javac %"
+    endif 
+endfunc
+
+
+" 编译（不运行） compile all *.cpp
+map <F12> :call CompileSingleFile()<CR>
+func! CompileSingleFile()
+    exec "w"
+    if &filetype == 'c'
+        exec "!gcc20 -g %"
+    elseif &filetype == 'cpp'
+        exec "!g++20 -g %"
+    elseif &filetype == 'rust'
+        exec "!cargo build"
+    elseif &filetype == 'java'
+        exec "!javac %"
+    endif 
+endfunc
+
+
+"按F10运行（不编译）run a.exe
+map <F10> :call RunFile()<CR>
+func! RunFile()
+    if &filetype == 'c'
+        exec "!a.exe"
+    elseif &filetype == 'cpp'
+        exec "!a.exe"
+    elseif &filetype == 'rust'
+        exec "!cargo run"
+    elseif &filetype == 'python'
+        exec "!python %"
+    elseif &filetype == 'java'
+        exec "!java %"
+    endif 
+endfunc
+
+
+
+"输入<ctrl-b> compile & run current file 
+map <C-b> :call CompileRunFile()<CR>
+func! CompileRunFile()
+    exec "w"
+    if &filetype == 'c'
+        exec "!gcc20 %"
+        exec "!a.exe"
+        exec "!del a.exe"
+    elseif &filetype == 'cpp'
+        exec "!g++20 %"
+        exec "!a.exe"
+        exec "!del a.exe"
+    elseif &filetype == 'python'
+        exec "!python %"
+    elseif &filetype == 'rust'
+        exec "!cargo run"
+    elseif &filetype == 'java'
+        exec "!java %"
+    elseif &filetype == 'text'
+        exec "!typst %"
+    endif 
+endfunc
+
+
+" >>>>>>>>>>>>>>>>>>>>>>> Compile & Run End <<<<<<<<<<<<<<<<<<<
+
+
+" normal下窗口跳动
+nnoremap <A-h> <C-w>h
+nnoremap <A-j> <C-w>j
+nnoremap <A-k> <C-w>k
+nnoremap <A-l> <C-w>l
+
+
+" normal 移动行
+nnoremap <C-j> ddp
+nnoremap <C-k> ddkkp
+" inoremap <C-j> <Esc>ddpa
+" inoremap <C-k> <Esc>ddkkpa
+
+
+" > cppcheck log  
+" >> check current file -> ,mf
+nmap ,mf :!check %<CR><CR>:split ErrorLog.txt<CR><C-w>r:resize 6<CR>ggddO[😀Made by Hugo🐕]<Esc>:w<CR>:set readonly<CR>:<Esc>
+" >> check whole directory -> ,md 
+nmap ,md :!check ./<CR><CR>:split ErrorLog.txt<CR><C-w>r:resize 6<CR>ggddO[😀Made by Hugo🐕]<Esc>:w<CR>:set readonly<CR>:<Esc>
+
+"----------------------------------------"
+
+
+
+"-----------------Sets-------------------"
+
+" 自动插入文件头
+autocmd BufNewFile * exec ":call SetTitle()"
+func! SetTitle() 
+    if &filetype == 'dosbatch'
+        call setline(1,"@echo off")
+        " call append(line("."),"#!/usr/bin/env python3")
+        " call append(line(".")+1, "#-----------------------------------------------------------------------#")
+        " call append(line(".")+2, "# File Name: ".expand("%"))
+        " call append(line(".")+3, "# Author: Hugo Nelson")
+        " call append(line(".")+4, "# Created Time: ".strftime("%c"))
+        " call append(line(".")+5, "#-----------------------------------------------------------------------#")
+        " call append(line(".")+6, "")
+    elseif &filetype == 'text'
+        call setline(1,",                    -*- FileType : None -*-")
+        call append(line("."),"+----------------------------------------------------------------------+")
+        call append(line(".")+1, "| File Name: ".expand("%"))
+        call append(line(".")+2, "| Author: Hugo Nelson")
+        call append(line(".")+3, "| Created Time: ".strftime("%c"))
+        call append(line(".")+4, "+----------------------------------------------------------------------+")
+        call append(line(".")+5, "")
+    elseif &filetype == 'markdown'
+        call setline(1,"<font face='Pointfree Nerd Font' size=4>")
+        call append(line("."),"")
+        call append(line(".")+1, "# ".expand("%"))
+        call append(line(".")+2, "<p align='right'> --by hugo, ".strftime("%c"))
+        call append(line(".")+3, "</p>")
+        call append(line(".")+4, "")
+        call append(line(".")+5, "${toc}")
+        call append(line(".")+6, "")
+        call append(line(".")+7, "---")
+        call append(line(".")+8, "")
+    endif
+    " normal Go 
+endfunc
+
+
+"修改注释颜色
+" :highlight Comment ctermfg=green guifg=green 
+
+
+"设置leader建
+let mapleader=","
+
+"粘贴前按F9防止格式混乱
+set pastetoggle=<F9>
+
+
+" 高亮显示对应的括号
+set showmatch
+
+
+" 对应括号高亮的时间（单位是十分之一秒）
+" set matchtime=5
+
+
+" 在状态行显示目前所执行的命令，未完成的指令片段亦会显示出来
+set showcmd
+
+
+" 命令行（在状态行）的高度，默认为1,这里是2
+set cmdheight=2
+
+
+
+" 搜索逐字符高亮
+set hlsearch
+set incsearch
+
+
+" 设置代码折叠
+"set nofoldenable             " 启动 vim 时关闭折叠代码
+"set foldmethod=indent        " 设置语法折叠
+"setlocal foldlevel=99        " 设置折叠层数
+"nnoremap <space> za          " 用空格键来开关折叠
+
+
+"显示行数
+set number
+set relativenumber
+
+
+"规定tab的大小,及替换tab为空格
+set tabstop=4
+set expandtab
+
+
+" 统一缩进为4
+set softtabstop=4
+set shiftwidth=4
+
+
+"搜索忽略大小写
+set ignorecase
+
+
+"显示状态栏
+set laststatus=2
+
+
+"状态栏
+" set statusline=%F%m%r%h%w%=(%{&ff}/%Y)\ (row\ %l,\ col\ %c)
+" set statusline+=%{&ff}  "显示文件格式类型
+" set statusline+=%h  "帮助文件标识
+" set statusline+=%m  "可编辑文件标识
+" set statusline+=%r  "只读文件标识
+" set statusline+=%y  "文件类型
+" set statusline+=%c  "光标所在列数
+" set statusline+=%l/%L  "光标所在行数/总行数
+" set statusline+=\ %P  "光标所在位置占总文件百分比
+"
+" New version
+set statusline=%1*\\ ->\ %<%.50F\                                    "显示文件名和文件路径 (%<应该可以去掉)
+set statusline+=%=%2*\%y%m%r%h%w\ %*                                  "显示文件类型及文件状态
+" set statusline+=%3*\%{&ff}\ \ encoding:[%{&fenc}]\ %*               "显示文件编码类型
+set statusline+=%3*\\ ->\ Hugo\ \ \ ->\ %{&fenc}\ %*                "显示文件编码类型
+set statusline+=%4*\ \ ->\ Row:\ %l\ of\ %L,\ Col:\ %c\ \ \ %*           "显示光标所在行和列
+" set statusline+=%5*\\ ->%3p%%\%*                                   "显示光标前文本所占总文本的比例
+set statusline+=%5*\\ ->%3p%%\%*                                   "显示光标前文本所占总文本的比例
+hi User1 cterm=none ctermfg=green ctermbg=0                           "第一个状态信息的颜色
+hi User2 cterm=none ctermfg=223 ctermbg=0
+hi User3 cterm=none ctermfg=169 ctermbg=0
+hi User4 cterm=none ctermfg=100 ctermbg=0
+hi User5 cterm=none ctermfg=223 ctermbg=0
+
+
+"能够自动补全显示命令行语句，并可利用”Tab”键进行相应的选择。
+set wildmenu
+
+
+"根据文件类型，加载缩进文件
+filetype indent on  
+
+set nobackup       "不生成备份文件 filename~
+"set noswapfile     "不生成交换文件 .filename.swp
+set noundofile     "不生成undo备份 .filename.un~
+
+"set backup         "生成备份文件 filename~
+"set swapfile       "生成交换文件 .filename.swp
+"set undofile       "生成undo备份 .filename.un~
+
+
+" 关闭错误信息响铃
+set noeb
+
+
+" 置空错误铃声的终端代码
+set vb t_vb= 
+
+
+" 打开状态栏标尺
+set ruler 
+
+
+"输入的命令显示出来，看的清楚些
+set showcmd
+
+
+"Mode Settings:shape of Cursor
+let &t_SI.="\e[5 q" "SI = INSERT mode
+let &t_SR.="\e[6 q" "SR = REPLACE mode
+let &t_EI.="\e[1 q" "EI = NORMAL mode (ELSE)
+"Cursor settings:
+"  1 -> blinking block
+"  2 -> solid block
+"  3 -> blinking underscore
+"  4 -> solid underscore
+"  5 -> blinking vertical bar
+"  6 -> solid vertical bar
+"
+" let &t_SI = "\<Esc>]50;CursorShape=1\x7"
+" let &t_SR = "\<Esc>]50;CursorShape=2\x7"
+" let &t_EI = "\<Esc>]50;CursorShape=0\x7"
+
+
+"设置自动换行的最大字符数: 
+autocmd BufEnter * exec ":set textwidth=10000000"
+"------------------End Set ----------------------------"
+
